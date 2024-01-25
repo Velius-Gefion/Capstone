@@ -628,7 +628,7 @@ const PatientList = ({ userData, patientData, appointmentData, serviceList }) =>
       return appointment;
     });
   };
-
+console.log.apply("Test");
   return (
     <Container className='mt-3 mb-3'>
       <Card>
