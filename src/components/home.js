@@ -64,7 +64,7 @@ export const Home = () => {
   const isAdmin = window.localStorage.getItem('isAdmin');
   const isLoggedIn = window.localStorage.getItem('isLoggedIn');
   const navigate = useNavigate();
-  const maintenance = useState(true);
+  const [maintenance, setMaintenance] = useState(true);
 
   useEffect(() => {
     if(isLoggedIn) {
