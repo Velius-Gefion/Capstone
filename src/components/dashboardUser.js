@@ -3,9 +3,9 @@ import { Logout } from './auth';
 import { Container, Modal, Navbar, Nav, Col, Row, Tab, Form, InputGroup, Button, Card, CardBody, CardGroup, CardHeader, CardFooter, Spinner } from 'react-bootstrap';
 import { db } from '../config/firebase';
 import { useNavigate } from 'react-router-dom';
-import { getDocs, getDoc, collection, addDoc, deleteDoc, updateDoc, doc, query, where, orderBy} from 'firebase/firestore'
-import { deleteUser, getAuth,
-    onAuthStateChanged, updatePassword, updateEmail, unlink } from 'firebase/auth';
+import { getDocs, getDoc, collection, deleteDoc, updateDoc, doc, query, where, orderBy} from 'firebase/firestore'
+import { getAuth,
+    onAuthStateChanged, updatePassword, updateEmail } from 'firebase/auth';
 import { Footer } from './home';
 import { GenericModal } from './utilities';
 
@@ -41,6 +41,7 @@ export const UserDashboard = () => {
   const [patientRef, setPatientRef] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const isAdmin = window.localStorage.getItem('isAdmin');
 
   useEffect(() => {
     const auth = getAuth();
@@ -50,6 +51,8 @@ export const UserDashboard = () => {
   
         if (!user) {
           navigate('/');
+        } else if (isAdmin) {
+          navigate('/admin-dashboard');
         } else {
           await checkUserRole(user.uid);
   

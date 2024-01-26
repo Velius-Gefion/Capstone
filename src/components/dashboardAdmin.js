@@ -20,6 +20,7 @@ export const AdminDashboard = () => {
   const [staffList, setStaffList] = useState(null);
   const [appointmentList, setAppointmentList] = useState(null);
   const [serviceList, setServiceList] = useState(null);
+  const isAdmin = window.localStorage.getItem('isAdmin');
 
   useEffect(() => {
     const auth = getAuth();
@@ -28,6 +29,8 @@ export const AdminDashboard = () => {
 
       if (!user) {
         navigate('/');
+      } else if (!isAdmin) {
+        navigate('/user-dashboard');
       } else {
         checkUserRole(user.uid);
 
@@ -628,7 +631,7 @@ const PatientList = ({ userData, patientData, appointmentData, serviceList }) =>
       return appointment;
     });
   };
-console.log.apply("Test");
+
   return (
     <Container className='mt-3 mb-3'>
       <Card>
@@ -968,6 +971,90 @@ function StaffList({ userList, patientList, staffList }) {
     );
   };
 
+  const handleAddAsStaff = async (id) => {
+    try {
+      const userDocRef = doc(db, 'users', id);
+      const userSnapshot = await getDoc(userDocRef);
+
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.data();
+
+        await updateDoc(userDocRef, {
+          user_Role: 'Staff',
+        });
+
+        const staffDocRef = doc(db, 'staffs', id);
+        await setDoc(staffDocRef, {
+          staff_JobDescription: '',
+          staff_Schedule: '',
+          staff_DateOfBirth: userData.patient_DateOfBirth || '',
+          staff_Gender: userData.patient_Gender || '',
+        });
+
+        const patientDocRef = doc(db, 'patients', id);
+        await deleteDoc(patientDocRef);
+
+        setUserData((prevUsers) => prevUsers.map((user) =>
+          user.id === id ? { ...user, user_Role: 'Staff' } : user
+        ));
+  
+        setPatientData((prevPatients) => prevPatients.filter((patient) => patient.id !== id));
+
+        setStaffData((prevStaffs) => prevStaffs.map((staff) => staff.id === id ? {
+          ...staff,
+          staff_DateOfBirth: userData.patient_DateOfBirth || '',
+          staff_Gender: userData.patient_Gender || '',
+          staff_JobDescription: '',
+          staff_Schedule:'',
+        } : staff));
+      }
+    } catch (error) {
+      console.error('Error adding as staff:', error);
+    }
+  };
+
+  const handleRemoveFromList = async (id) => {
+    try {
+      const userDocRef = doc(db, 'users', id);
+      const userSnapshot = await getDoc(userDocRef);
+  
+      if (userSnapshot.exists()) {
+        const userData = userSnapshot.data();
+  
+        await updateDoc(userDocRef, {
+          user_Role: 'Patient',
+        });
+  
+        const patientDocRef = doc(db, 'patients', id);
+        
+        await setDoc(patientDocRef, {
+          patient_DateOfBirth: userData.staff_DateOfBirth || '',
+          patient_Gender: userData.staff_Gender || '',
+        });
+  
+        const staffDocRef = doc(db, 'staffs', id);
+  
+        await deleteDoc(staffDocRef);
+  
+        setUserData((prevUsers) => prevUsers.map((user) =>
+          user.id === id ? { ...user, user_Role: 'Patient' } : user
+        ));
+  
+        setPatientData((prevPatients) => prevPatients.map((patient) =>
+          patient.id === id ? {
+            ...patient,
+            patient_DateOfBirth: userData.staff_DateOfBirth || '',
+            patient_Gender: userData.staff_Gender || '',
+          } : patient
+        ));
+  
+        setStaffData((prevStaffs) => prevStaffs.filter((staff) => staff.id !== id));
+      }
+    } catch (error) {
+      console.error('Error removing from list:', error);
+    }
+  };
+
   const handleStartDateChange = (date) => {
     setStartDate(date);
   };
@@ -1002,65 +1089,6 @@ function StaffList({ userList, patientList, staffList }) {
     } catch (error) {
       console.error('Error updating schedule:', error);
     }
-  };
-
-  const StaffAdditionModal = ({ userList, searchTerm, changeToForm, onUpdateUser, onUpdatePatient, onUpdateStaff }) => {
-
-    const addAsStaff = async (id) => {
-      try {
-        const userDocRef = doc(db, 'users', id);
-        const userSnapshot = await getDoc(userDocRef);
-
-        if (userSnapshot.exists()) {
-          const userData = userSnapshot.data();
-
-          await updateDoc(userDocRef, {
-            user_Role: 'Staff',
-          });
-
-          const staffDocRef = doc(db, 'staffs', id);
-          await setDoc(staffDocRef, {
-            staff_JobDescription: '',
-            staff_Schedule: '',
-            staff_DateOfBirth: userData.patient_DateOfBirth || '',
-            staff_Gender: userData.patient_Gender || '',
-          });
-
-          const patientDocRef = doc(db, 'patients', id);
-          await deleteDoc(patientDocRef);
-
-          onUpdateUser();
-          onUpdateStaff();
-          onUpdatePatient();
-        }
-      } catch (error) {
-        console.error('Error adding as staff:', error);
-      }
-    };
-
-    return (
-      <>
-        {searchTerm !== "" && changeToForm && userList.map((user) => (
-          <Card className='mb-3' key={user.id}>
-            <CardHeader>
-              <h6 className='mt-2'><strong>Name: </strong>{user.user_FirstName} {user.user_MiddleName} {user.user_LastName}</h6>
-            </CardHeader>
-            <CardBody>
-              <h6><strong>User Role: </strong>{user.user_Role}</h6>
-              <h6><strong>Email: </strong>{user.user_Email}</h6>
-              <h6><strong>Mobile Number: </strong>{user.user_MobileNumber}</h6>
-            </CardBody>
-            <CardFooter>
-              <div className="d-flex justify-content-center align-items-center">
-                <Button onClick={() => addAsStaff(user.id)}>
-                  Add as a Staff
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </>
-    );
   };
 
   const filteredUsers = userList.filter((user) => user.user_Role === 'Patient' &&
@@ -1243,7 +1271,7 @@ function StaffList({ userList, patientList, staffList }) {
                       <Button variant='info' onClick={() => setOpenedUpdateModal(users.id)}>
                         Update Information
                       </Button>
-                      <Button onClick={(console.log("Yeet"))}>
+                      <Button onClick={() => handleRemoveFromList(users.id)}>
                         Remove from List
                       </Button>
                       <Button variant="secondary" onClick={ChangeToScheduleCard}>
@@ -1261,15 +1289,25 @@ function StaffList({ userList, patientList, staffList }) {
                 </Card>
               ))
           ) : (
-            searchTerm !== "" && (
-              <StaffAdditionModal
-                userList={filteredUsers}
-                searchTerm={searchTerm}
-                changeToForm={changeToForm}
-                onUpdateUser={(updatedData) => setUserData((prevUsers) => updateUserData(prevUsers, filteredUsers[0].id, updatedData))}
-                onUpdatePatient={(updatedData) => setPatientData((prevPatients) => updatePatientData(prevPatients, filteredUsers[0].id, updatedData))}
-                onUpdateStaff={(updatedData) => setStaffData((prevStaffs) => updateStaffData(prevStaffs, filteredUsers[0].id, updatedData))} />
-            ))}
+            searchTerm !== "" && changeToForm && filteredUsers.map((user) => (
+            <Card className='mb-3' key={user.id}>
+              <CardHeader>
+                <h6 className='mt-2'><strong>Name: </strong>{user.user_FirstName} {user.user_MiddleName} {user.user_LastName}</h6>
+              </CardHeader>
+              <CardBody>
+                <h6><strong>User Role: </strong>{user.user_Role}</h6>
+                <h6><strong>Email: </strong>{user.user_Email}</h6>
+                <h6><strong>Mobile Number: </strong>{user.user_MobileNumber}</h6>
+              </CardBody>
+              <CardFooter>
+                <div className="d-flex justify-content-center align-items-center">
+                  <Button onClick={() => handleAddAsStaff(user.id)}>
+                    Add as a Staff
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          )))}
         </CardBody>
       </Card>
     </Container>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -61,6 +61,19 @@ export const Footer = () => {
 
 export const Home = () => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const isAdmin = window.localStorage.getItem('isAdmin');
+  const isLoggedIn = window.localStorage.getItem('isLoggedIn');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if(isLoggedIn) {
+      if(isAdmin) {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/user-dashboard');
+      }
+    }
+  });
 
   const openRegisterModal = () => {
     setShowRegisterModal(true);
