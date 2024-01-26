@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
-import { Offcanvas, Card, Row, Col, CardBody, ListGroup } from 'react-bootstrap';
+import { Offcanvas, Card, Row, Col, CardBody, ListGroup, Spinner } from 'react-bootstrap';
 import { Login, Register } from './auth';
 
 export const CustomNavbar = () => {
@@ -64,6 +64,7 @@ export const Home = () => {
   const isAdmin = window.localStorage.getItem('isAdmin');
   const isLoggedIn = window.localStorage.getItem('isLoggedIn');
   const navigate = useNavigate();
+  const maintenance = useState(true);
 
   useEffect(() => {
     if(isLoggedIn) {
@@ -74,6 +75,22 @@ export const Home = () => {
       }
     }
   });
+
+  if (maintenance)
+  {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <Row>
+          <Col className="d-flex align-items-center">
+            <Spinner animation="border" role="status" className="me-2">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+            <h2 className='mt-2'>Maintenance...</h2>
+          </Col>
+        </Row>
+      </div>
+    )
+  }
 
   const openRegisterModal = () => {
     setShowRegisterModal(true);

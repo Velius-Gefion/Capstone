@@ -1,7 +1,7 @@
 import React, { useEffect, useState} from 'react';
 import { db } from '../config/firebase';
 import { getDocs, setDoc, getDoc, collection, addDoc, deleteDoc, updateDoc, doc, query, where } from 'firebase/firestore'
-import { Tab, Row, Col, Modal, Container, Navbar, Form, InputGroup, Nav, CardGroup, Card, CardHeader, CardBody, CardFooter, Button, Offcanvas, OffcanvasBody, OffcanvasHeader, FormControl, ModalHeader, ModalBody, ModalFooter, Accordion, Spinner, Dropdown } from 'react-bootstrap';
+import { Tab, Row, Col, Modal, Container, Navbar, Form, InputGroup, Nav, CardGroup, Card, CardHeader, CardBody, CardFooter, Button, Offcanvas, OffcanvasBody, OffcanvasHeader, FormControl, ModalHeader, ModalBody, Accordion, Spinner } from 'react-bootstrap';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { getAuth, onAuthStateChanged, updateEmail, updatePassword } from 'firebase/auth';
